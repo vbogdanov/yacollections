@@ -1,0 +1,26 @@
+{
+  "name": "collections",
+  "version": "0.0.0",
+  "description": "A simple pack of collections for node and browser. No external dependencies. No prototype modifications. HashTable, Dictionary, HashSet, List. JavaScript objects are used instead of proper HashTable algorythm",
+  "main": "lib/collections.js",
+  "scripts": {
+    "test": "jasmine-node tests/"
+  },
+  "dependencies": {
+    "safemap":"0.2.0"
+  },
+  "devDependencies": {
+    "jasmine-node": "latest",
+    "jshint":       "latest"
+  },
+  "keywords": [
+    "HashTable",
+    "Dictionary",
+    "HashSet",
+    "Set",
+    "List",
+    "Collections"
+  ],
+  "author": "Valeri Bogdanov",
+  "license": "MIT"
+}
