@@ -11,6 +11,7 @@
 	"eqeqeq": true,
 	"globals": {
 		"require": false,
+		"define":false,
 		"module": true,
 		"process": false,
 		"console": false
