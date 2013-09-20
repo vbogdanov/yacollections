@@ -31,6 +31,18 @@ describe('Map', function () {
       expect(map.forEach).toBeTruthy();
     });
 
+    it('works for "0" hash codes', function () {
+      map.set('0', 0);
+
+      expect(map.get('0')).toBe(0);
+    });
+
+    it('works for "" hash codes', function () {
+      map.set('', 0);
+
+      expect(map.get('')).toBe(0);
+    });
+
     function checkEmptyMapBehavior() {
       it('returns false on has', function () {
           expect(map.has(FOO)).toBe(false);
