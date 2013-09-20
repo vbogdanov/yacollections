@@ -11,7 +11,11 @@
   },
   "devDependencies": {
     "jasmine-node": "latest",
-    "jshint":       "latest"
+    "jshint":       "latest",
+    "hashes":       "latest",
+    "hashtbl2":     "latest",
+    "ht":           "latest",
+    "es6-collections":"latest"
   },
   "keywords": [
     "HashTable",
