@@ -1,13 +1,19 @@
 {
-  "name": "collections",
-  "version": "0.0.0",
-  "description": "A simple pack of collections for node and browser. No external dependencies. No prototype modifications. HashTable, Dictionary, HashSet, List. JavaScript objects are used instead of proper HashTable algorythm",
-  "main": "lib/collections.js",
+  "name": "yacollections",
+  "version": "0.0.1",
+  "description": "A simple pack of collections for node and browser. No prototype modifications. Map, Set, List. JavaScript objects are used instead of HashTable algorythm implementation",
+  "main": "src/collections.js",
   "scripts": {
-    "test": "jasmine-node tests/"
+    "test": "jasmine-node test/"
   },
   "dependencies": {
     "safemap":"0.2.0"
+  },
+  "jam":{
+    "dependencies": {
+      "safemap":"0.2.0",
+      "jasmine":null
+    }
   },
   "devDependencies": {
     "jasmine-node": "latest",

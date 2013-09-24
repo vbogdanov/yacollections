@@ -15,22 +15,13 @@
     return result;
   }
 
-  // function DefaultHashCode (object) {
-  //     return (object.hashCode && object.hashCode()) || 
-  //         (object.toString && object.toString()) ||
-  //         ('' + object);
-  // }
-
-  function AlternativeHashCode(object) {
-    return object.name;
-  }
-
+  
   function nothing(object) {}
 
   function Person(name) {
     this.name = name;
   }
-  Person.hashCode = function () {
+  Person.prototype.hashCode = function () {
     return this.name;
   };
   
@@ -39,8 +30,10 @@
   };
  
   // var map = new HMap();
-  var map = new HMap({
-    hashFn: AlternativeHashCode
+  var map = new HMap();
+
+  run10000times('construct objects', function (i) {
+    nothing(new Person('pier' + i));
   });
 
   var s1 = run10000times('sets', function (i) {
@@ -65,15 +58,4 @@
   console.log('delta set', s1[1] - s2[1]);
   console.log('delta get', g1[1] - g2[1]);
   
-  run10000times('construct objects', function (i) {
-    nothing(new Person('pier' + i));
-  });
-
-  // run10000times('defaultHashCode', function (i) {
-  //   DefaultHashCode(new Person('pier' + i));
-  // });
-
-  run10000times('AlternativeHashCode', function (i) {
-    AlternativeHashCode(new Person('pier' + i));
-  });
 })();

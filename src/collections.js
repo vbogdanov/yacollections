@@ -10,7 +10,7 @@
         module.exports = factory(require('safemap'));
     } else {
         // Browser globals (root is window)
-        root.returnExports = factory(root.safemap);
+        root.collections = factory(root.SafeMap);
     }
 })(this, 
 //actual module
@@ -37,7 +37,6 @@ function (SafeMap) {
             this.key = key;
             this.value = value;
         }
-        var EMPTY_LIST = new List();
 
         options = options || {};
         var hashFn = options.hashFn || DefaultHashCode;
@@ -60,51 +59,46 @@ function (SafeMap) {
             for (var i = list.length - 1; i >= 0; i --) {
                 var entry = list[i];
                 if(equalsFn(entry.key, key)) {
-                    return { 'entry': entry, 'list': list, 'index': i };
+                    return { 'entry': entry, 'list': list, 'index': i, 'hash': hash };
                 }
             }
             return {
                 'list': list,
-                'index': -1
-            };
-        }
-
-        function matcher(key) {
-            return function (entry) {
-                return equalsFn(key, entry.key);
+                'index': -1,
+                'hash': hash
             };
         }
 
         this.has = function has (key) {
-            var hash = hashFn(key);
-            return data.has(hash) && data.get(hash).containsMatch(matcher(key));
+            var res = search(key, true);
+            return res && res.index !== -1;
         };
 
         this.get = function get (key, defaultVal) {
-            var hash = hashFn(key);
-            defaultVal = defaultVal || null;
-            var entry = data.get(hash, EMPTY_LIST).getMatch(matcher(key));
-            return entry? entry.value: defaultVal;
+            var res = search(key, true);
+            if (!res || res.index === -1)
+                return defaultVal;
+            return res.entry.value;
         };
 
         this.set = function set(key, value) {
-            var hash = hashFn(key);
-            var list = data.get(hash);
-            if (typeof list === 'undefined') {
-                list = new List();
-                data.set(hash, list);
-            } else {
-                list.removeMatch(matcher(key));    
-            }
-            list.push(new Entry(key, value));
+            var res = search(key, false);
+            res.list.push(new Entry(key, value));
+            //remove existing entries with equal key
+            if (res.index !== -1)
+                res.list.splice(res.index, 1);
         };
 
         this.remove = function remove(key) {
-            var hash = hashFn(key);
-            var list = data.get(hash, new List());
-            var removed = list.removeMatch(matcher(key));
-            if (list.length === 0) {
-                data.remove(hash);
+            var removed;
+            var res = search(key, true);
+            if (res) {
+                if (res.index !== -1) {
+                    removed = res.list.splice(res.index, 1)[0];
+                }
+                if (res.list.length === 0) {
+                    data.remove(res.hash);
+                }
             }
             return removed && removed.value;
         };
@@ -148,51 +142,14 @@ function (SafeMap) {
         //List constructor
         function List() {
         }
+
         List.prototype = Object.create(Array.prototype);
 
-        List.prototype.contains = function (object, equalsFn) {
-            equalsFn = equalsFn || DefaultEquals;
-            return this.containsMatch(function (value) {
-                return equalsFn(object, value);
-            });
-        };
-
-        List.prototype.match = function (matchFn, foundFn, notFoundValue) {
-            for (var i = 0; i < this.length; i ++)
-                if(matchFn(this[i], i, this))
-                    return foundFn(this[i], i, this);
-            return notFoundValue;
-        };
-
-        function containsFound() {
-            return true;
-        }
-        List.prototype.containsMatch = function (matchFn) {
-            return this.match(matchFn, containsFound, false);
-        };
-
-
-        function getFound(v) {
-            return v;
-        }
-        List.prototype.getMatch = function (matchFn) {
-            return this.match(matchFn, getFound);
-        };
-
-        function indexOfFound(v, i) {
-            return i;
-        }
-        List.prototype.indexOfMatch = function (matchFn) {
-            return this.match(matchFn, indexOfFound, -1);
-        };
-
-        List.prototype.removeMatch = function (matchFn) {
-            var i = this.indexOfMatch(matchFn);
-            return this.removeAtIndex(i);
-        };
-
-        List.prototype.removeAtIndex = function (index) {
-            return (this.splice(index, 1))[0];
+        List.prototype.remove = function (item) {
+            var index = this.indexOf(item);
+            if (index !== -1)
+                return this.splice(index, 1)[0];
+            //else return undefined
         };
 
         return List;

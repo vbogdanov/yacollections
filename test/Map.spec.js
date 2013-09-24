@@ -4,13 +4,29 @@
 /* global beforeEach: false */
 /* global jasmine: false */
 /* jshint maxstatements: 30 */
-var Map = require('../lib/collections.js').Map;
-
-describe('Map', function () {
+(function (root, factory) {
   'use strict';
+  if (typeof define === 'function' && define.amd) {
+    // AMD. Register as an anonymous module.
+    define(['src/collections'], factory);
+  } else if (typeof exports === 'object') {
+    // Node. Does not work with strict CommonJS, but
+    // only CommonJS-like enviroments that support module.exports,
+    // like Node.
+    module.exports = factory(require('../src/collections'));
+  } else {
+    // Browser globals (root is window)
+    root.spec = root.spec || {};
+    root.spec.Map = factory(root.collections);
+  }
+})(this, function(collections) {
+'use strict';
+
+var Map = collections.Map;
+describe('Map', function () {
   it('is created using "new Map()"', function () {
     expect(function () {
-      var map = new Map();
+      expect(new Map()).toEqual(jasmine.any(Map));
     }).not.toThrow();
   });
 
@@ -48,8 +64,8 @@ describe('Map', function () {
           expect(map.has(FOO)).toBe(false);
         });
 
-        it('returns null on get', function () {
-          expect(map.get(FOO)).toBeNull();
+        it('returns undefined on get', function () {
+          expect(map.get(FOO)).toBeUndefined();
         });
 
         it('can set a key->value pair', function () {
@@ -61,9 +77,9 @@ describe('Map', function () {
         it('can call remove without any effect', function () {
           var removed;
           expect(function () {
-            var removed = map.remove(FOO);
+            removed = map.remove(FOO);
           }).not.toThrow();
-          expect(removed).not.toBeDefined();      
+          expect(removed).not.toBeDefined();
         });
 
         it('can clear', function () {
@@ -98,9 +114,9 @@ describe('Map', function () {
         expect(map.has(BAR)).toBe(false);
       });
 
-      it('returns the BAZ on get(FOO), null otherwise', function () {
+      it('returns the BAZ on get(FOO), undefined otherwise', function () {
         expect(map.get(FOO)).toBe(BAZ);
-        expect(map.get(BAR)).toBeNull();
+        expect(map.get(BAR)).toBeUndefined();
       });
 
       it('can set a key->value pair', function () {
@@ -115,7 +131,7 @@ describe('Map', function () {
           removed = map.remove(FOO);
         }).not.toThrow();
         expect(removed).toBe(BAZ);
-        expect(map.get(FOO)).toBeNull();
+        expect(map.get(FOO)).toBeUndefined();
       });
 
       it('can clear the map', function () {
@@ -164,10 +180,10 @@ describe('Map', function () {
           expect(map.has(BAZ)).toBe(false);
         });
 
-        it('returns the BAZ on get(FOO), null otherwise', function () {
+        it('returns the BAZ on get(FOO), undefined otherwise', function () {
           expect(map.get(FOO)).toBe(BAZ);
           expect(map.get(BAR)).toBe(GAS);
-          expect(map.get(BAZ)).toBeNull();
+          expect(map.get(BAZ)).toBeUndefined();
         });
 
         it('can set a key->value pair', function () {
@@ -187,7 +203,7 @@ describe('Map', function () {
           }).not.toThrow();
           expect(removed).toBe(BAZ);
           expect(map.get(BAR)).toBe(GAS);
-          expect(map.get(FOO)).toBeNull();
+          expect(map.get(FOO)).toBeUndefined();
         });
 
         it('can clear the map', function () {
@@ -214,4 +230,6 @@ describe('Map', function () {
       });
     });
   });
+});
+
 });
