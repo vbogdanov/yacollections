@@ -32,7 +32,11 @@ describe('Map', function () {
 
   describe(' while empty', function () {
     var FOO = Object.freeze({ key: 'something' });
+    var BAZ = Object.freeze({ value: 5 });
+    var BAR = 5; //not there key
+    var GAS = Object.freeze({ toString: function () { return 'GAS'; } });
     var map;
+
     beforeEach(function () {
       map = new Map();
     });
@@ -49,186 +53,138 @@ describe('Map', function () {
 
     it('works for "0" hash codes', function () {
       map.set('0', 0);
-
       expect(map.get('0')).toBe(0);
     });
 
     it('works for "" hash codes', function () {
       map.set('', 0);
-
       expect(map.get('')).toBe(0);
     });
 
-    function checkEmptyMapBehavior() {
-      it('returns false on has', function () {
-          expect(map.has(FOO)).toBe(false);
+    checkMapBehavior([], FOO);
+
+    describe('a pair is added', function () {
+      beforeEach(function () {
+        map.set(FOO, BAZ);
+      });
+      checkMapBehavior([[FOO, BAZ]], BAR);
+
+      describe('and cleared', function () {
+        beforeEach(function () {
+          map.clear();
+        });
+        checkMapBehavior([], FOO);
+      });
+
+      describe('and removed FOO key', function () {
+        beforeEach(function () {
+          map.remove(FOO);
+        });
+        checkMapBehavior([], FOO);
+      });
+
+      describe('and added another pair - BAR=>GAS', function () {
+        beforeEach(function () {
+          map.set(BAR, GAS);
+        });
+        checkMapBehavior([[FOO, BAZ], [BAR, GAS]], BAZ);
+        describe('and cleared', function () {
+          beforeEach(function () {
+            map.clear();
+          });
+          checkMapBehavior([], FOO);
         });
 
-        it('returns undefined on get', function () {
-          expect(map.get(FOO)).toBeUndefined();
+        describe('and removed FOO key', function () {
+          beforeEach(function () {
+            map.remove(FOO);
+          });
+          checkMapBehavior([[BAR, GAS]], FOO);
+        });
+      });
+
+    });
+
+    function checkMapBehavior(expectedContents, notPresentKey) {
+      it('has no not present key', function () {
+        expect(map.has(notPresentKey)).toBe(false);
+      });
+
+      it('gets undefined for not present key', function () {
+        expect(map.get(notPresentKey)).toBeUndefined();
+      });
+
+      it('can set a key->value pair, that does not exist', function () {
+        expect(function () {
+          map.set(notPresentKey, 'value');
+        }).not.toThrow();
+      });
+
+      it('removes not existent keys without any effect', function () {
+        var removed;
+        expect(function () {
+          removed = map.remove(notPresentKey);
+        }).not.toThrow();
+        expect(removed).not.toBeDefined();
+      });
+
+      it('clears clean maps', function () {
+        expect(function () {
+          map.clear();
+        }).not.toThrow();
+      });
+
+      for (var contentIndex = 0; contentIndex < expectedContents.length; contentIndex ++) {
+        var presentKey = expectedContents[contentIndex][0];
+        var value = expectedContents[contentIndex][1];
+        
+        it('has present key', function () {
+          expect(map.has(presentKey)).toBe(true);
         });
 
-        it('can set a key->value pair', function () {
+        it('gets value for present key', function () {
+          expect(map.get(presentKey)).toEqual(value);
+        });
+
+        it('can set a new value for a key that exists', function () {
           expect(function () {
-            map.set(FOO, 'value');
+            map.set(presentKey, 'value');
           }).not.toThrow();
         });
 
-        it('can call remove without any effect', function () {
-          var removed;
-          expect(function () {
-            removed = map.remove(FOO);
-          }).not.toThrow();
-          expect(removed).not.toBeDefined();
+        it('removes existing entries returning the value of the entry', function () {
+          var removed = map.remove(presentKey);
+          expect(removed).toBe(value);
         });
 
-        it('can clear', function () {
+        it('clears dirty maps as well', function () {
           expect(function () {
             map.clear();
           }).not.toThrow();
         });
-
-        it('has a size of 0', function () {
-          expect(map.size()).toBe(0);
-        });
-
-        it('can call forEach, but the callback will not be invoked', function () {
-          var callback = jasmine.createSpy('forEach callback');
-          expect(function () {
-            map.forEach(callback);
-          }).not.toThrow();
-          expect(callback).not.toHaveBeenCalled();
-        });
-    }
-    checkEmptyMapBehavior();
-
-    describe(' a pair is added ', function () {
-      var BAZ = Object.freeze({ value: 5 });
-      var BAR = 5; //not there key
-      beforeEach(function () {
-        map.set(FOO, BAZ);
+      }
+      
+      it('measures the size of contents (count of entries)', function () {
+        expect(map.size()).toBe(expectedContents.length);
       });
-
-      it('returns true on has for FOO, false on others', function () {
-        expect(map.has(FOO)).toBe(true);
-        expect(map.has(BAR)).toBe(false);
-      });
-
-      it('returns the BAZ on get(FOO), undefined otherwise', function () {
-        expect(map.get(FOO)).toBe(BAZ);
-        expect(map.get(BAR)).toBeUndefined();
-      });
-
-      it('can set a key->value pair', function () {
-        expect(function () {
-          map.set(BAR, 'value');
-        }).not.toThrow();
-      });
-
-      it('can remove FOO=>BAZ from the map', function () {
-        var removed;
-        expect(function () {
-          removed = map.remove(FOO);
-        }).not.toThrow();
-        expect(removed).toBe(BAZ);
-        expect(map.get(FOO)).toBeUndefined();
-      });
-
-      it('can clear the map', function () {
-        expect(function () {
-          map.clear();
-        }).not.toThrow();
-        expect(map.size()).toBe(0); //nothing left in the map
-      });
-
-      it('has a size of 1', function () {
-        expect(map.size()).toBe(1);
-      });
-
-      it('can call forEach, and the callback is invoked once with FOO, BAZ', function () {
+      
+      it('iterates forEach entry', function () {
         var callback = jasmine.createSpy('forEach callback');
         expect(function () {
           map.forEach(callback);
         }).not.toThrow();
-        expect(callback.calls.length).toEqual(1);
-        expect(callback).toHaveBeenCalledWith(FOO, BAZ);
+        if (expectedContents.length === 0) {
+          expect(callback).not.toHaveBeenCalled();  
+        } else {
+          expect(callback).toHaveBeenCalled();
+          expect(callback.calls.length).toEqual(expectedContents.length);
+          for (var i = 0; i < expectedContents.length; i ++) {
+            expect(callback).toHaveBeenCalledWith(expectedContents[i][0], expectedContents[i][1]);
+          }
+        }
       });
-
-      describe(' and cleared afterwards ', function () {
-        beforeEach(function () {
-          map.clear();
-        });
-        checkEmptyMapBehavior();
-      });
-
-      describe(' and removed FOO ', function () {
-        beforeEach(function () {
-          map.remove(FOO);
-        });
-        checkEmptyMapBehavior();
-      });
-
-      describe('and added another pair - BAR=>GAS', function () {
-        var GAS = Object.freeze({ toString: function () { return 'GAS'; } });
-        beforeEach(function () {
-          map.set(BAR, GAS);
-        });
-
-        it('returns true on has for FOO, BAR, false on others', function () {
-          expect(map.has(FOO)).toBe(true);
-          expect(map.has(BAR)).toBe(true);
-          expect(map.has(BAZ)).toBe(false);
-        });
-
-        it('returns the BAZ on get(FOO), undefined otherwise', function () {
-          expect(map.get(FOO)).toBe(BAZ);
-          expect(map.get(BAR)).toBe(GAS);
-          expect(map.get(BAZ)).toBeUndefined();
-        });
-
-        it('can set a key->value pair', function () {
-          expect(function () {
-            map.set(GAS, 'value');
-          }).not.toThrow();
-
-          expect(function () {
-            map.set(BAR, BAZ);
-          }).not.toThrow();
-        });
-
-        it('can remove FOO=>BAZ from the map', function () {
-          var removed;
-          expect(function () {
-            removed = map.remove(FOO);
-          }).not.toThrow();
-          expect(removed).toBe(BAZ);
-          expect(map.get(BAR)).toBe(GAS);
-          expect(map.get(FOO)).toBeUndefined();
-        });
-
-        it('can clear the map', function () {
-          expect(function () {
-            map.clear();
-          }).not.toThrow();
-          expect(map.size()).toBe(0); //nothing left in the map
-        });
-
-        it('has a size of 1', function () {
-          expect(map.size()).toBe(2);
-        });
-
-        it('can call forEach, and the callback is invoked once with FOO, BAZ', function () {
-          var callback = jasmine.createSpy('forEach callback');
-          expect(function () {
-            map.forEach(callback);
-          }).not.toThrow();
-          expect(callback.calls.length).toEqual(2);
-          expect(callback).toHaveBeenCalledWith(FOO, BAZ);
-          expect(callback).toHaveBeenCalledWith(BAR, GAS);
-        });
-
-      });
-    });
+    }
+    
   });
 });
 
